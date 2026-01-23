@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📌 便利貼留言牆</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* 軟木塞牆壁背景 */
+    .board {
+      min-height: 100vh;
+      background: 
+        url("data:image/svg+xml,%3Csvg viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='50' cy='50' r='1' fill='%23a67c52' opacity='0.3'/%3E%3C/svg%3E") 0 0 / 20px 20px,
+        linear-gradient(135deg, #d4a574 0%, #c9956a 50%, #be8860 100%);
+      position: relative;
+      padding: 20px;
+      padding-top: 90px;
+    }
+    
+    /* 頂部工具列 */
+    .toolbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      background: rgba(60, 60, 60, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 15px 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+    }
+    
+    .toolbar h1 {
+      color: #fff;
+      font-size: 1.4rem;
+      font-weight: 500;
+    }
+    
+    .toolbar-btns {
+      display: flex;
+      gap: 10px;
+    }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      font-weight: 500;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    
+    .btn-add {
+      background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
+      color: #fff;
+    }
+    
+    .btn-add:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(238, 90, 90, 0.4);
+    }
+    
+    .btn-refresh {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+    
+    .btn-refresh:hover {
+      background: rgba(255,255,255,0.25);
+    }
+    
+    /* 便利貼容器 */
+    .notes-container {
+      position: relative;
+      min-height: calc(100vh - 110px);
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    
+    /* 便利貼樣式 */
+    .sticky-note {
+      position: absolute;
+      width: 200px;
+      min-height: 180px;
+      padding: 15px;
+      padding-top: 25px;
+      border-radius: 3px;
+      box-shadow: 
+        3px 3px 10px rgba(0,0,0,0.2),
+        0 0 1px rgba(0,0,0,0.1);
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      word-break: break-word;
+    }
+    
+    .sticky-note::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 25px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.08), transparent);
+      border-radius: 3px 3px 0 0;
+    }
+    
+    .sticky-note:hover {
+      transform: scale(1.05) rotate(0deg) !important;
+      box-shadow: 
+        8px 8px 25px rgba(0,0,0,0.3),
+        0 0 1px rgba(0,0,0,0.1);
+      z-index: 10;
+    }
+    
+    /* 圖釘 */
+    .sticky-note::after {
+      content: '📌';
+      position: absolute;
+      top: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.2rem;
+      filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
+    }
+    
+    /* 便利貼顏色 */
+    .note-yellow { background: linear-gradient(135deg, #fff59d, #fff176); }
+    .note-pink { background: linear-gradient(135deg, #f8bbd9, #f48fb1); }
+    .note-blue { background: linear-gradient(135deg, #b3e5fc, #81d4fa); }
+    .note-green { background: linear-gradient(135deg, #c8e6c9, #a5d6a7); }
+    .note-purple { background: linear-gradient(135deg, #e1bee7, #ce93d8); }
+    .note-orange { background: linear-gradient(135deg, #ffe0b2, #ffcc80); }
+    
+    .note-name {
+      font-weight: 700;
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #333;
+      border-bottom: 2px solid rgba(0,0,0,0.1);
+      padding-bottom: 8px;
+    }
+    
+    .note-message {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #444;
+      white-space: pre-wrap;
+    }
+    
+    .note-time {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-size: 0.7rem;
+      color: rgba(0,0,0,0.4);
+    }
+    
+    /* Modal 共用樣式 */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+    }
+    
+    .modal-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      padding: 30px;
+      width: 90%;
+      max-width: 450px;
+      max-height: 90vh;
+      overflow-y: auto;
+      transform: scale(0.9) translateY(20px);
+      transition: all 0.3s;
+    }
+    
+    .modal-overlay.show .modal {
+      transform: scale(1) translateY(0);
+    }
+    
+    .modal h2 {
+      margin-bottom: 20px;
+      color: #333;
+      font-size: 1.4rem;
+    }
+    
+    .form-group {
+      margin-bottom: 18px;
+    }
+    
+    .form-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #555;
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+    
+    .form-group label .required {
+      color: #e74c3c;
+    }
+    
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: 12px 15px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 1rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    .form-group textarea {
+      resize: vertical;
+      min-height: 100px;
+    }
+    
+    .form-hint {
+      font-size: 0.8rem;
+      color: #888;
+      margin-top: 5px;
+    }
+    
+    /* 顏色選擇器 */
+    .color-picker {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .color-option {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 3px solid transparent;
+      transition: all 0.2s;
+    }
+    
+    .color-option:hover {
+      transform: scale(1.1);
+    }
+    
+    .color-option.selected {
+      border-color: #333;
+      box-shadow: 0 0 0 2px #fff, 0 0 0 4px #333;
+    }
+    
+    .color-yellow { background: #fff176; }
+    .color-pink { background: #f48fb1; }
+    .color-blue { background: #81d4fa; }
+    .color-green { background: #a5d6a7; }
+    .color-purple { background: #ce93d8; }
+    .color-orange { background: #ffcc80; }
+    
+    .modal-btns {
+      display: flex;
+      gap: 12px;
+      margin-top: 25px;
+    }
+    
+    .modal-btns .btn {
+      flex: 1;
+      padding: 14px;
+    }
+    
+    .btn-cancel {
+      background: #e0e0e0;
+      color: #333;
+    }
+    
+    .btn-submit {
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: #fff;
+    }
+    
+    .btn-submit:hover {
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .btn-delete {
+      background: #e74c3c;
+      color: #fff;
+    }
+    
+    .btn-edit {
+      background: #3498db;
+      color: #fff;
+    }
+    
+    /* 檢視留言 Modal */
+    .view-note-content {
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .view-note-name {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 15px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid rgba(0,0,0,0.1);
+    }
+    
+    .view-note-message {
+      font-size: 1rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+    }
+    
+    .view-note-time {
+      text-align: right;
+      font-size: 0.85rem;
+      color: #888;
+      margin-top: 15px;
+    }
+    
+    .view-actions {
+      border-top: 1px solid #eee;
+      padding-top: 20px;
+    }
+    
+    .view-actions p {
+      font-size: 0.9rem;
+      color: #666;
+      margin-bottom: 15px;
+    }
+    
+    /* Toast 提示 */
+    .toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 15px 30px;
+      border-radius: 30px;
+      color: #fff;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 300;
+    }
+    
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+    
+    .toast.success { background: #27ae60; }
+    .toast.error { background: #e74c3c; }
+    
+    /* 空白狀態 */
+    .empty-state {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: rgba(255,255,255,0.8);
+    }
+    
+    .empty-state-icon {
+      font-size: 5rem;
+      margin-bottom: 20px;
+    }
+    
+    .empty-state p {
+      font-size: 1.2rem;
+      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+    }
+    
+    /* 載入動畫 */
+    .loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      color: #fff;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 15px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* RWD */
+    @media (max-width: 600px) {
+      .toolbar h1 { font-size: 1.1rem; }
+      .sticky-note { width: 160px; min-height: 150px; }
+      .modal { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- 頂部工具列 -->
+  <div class="toolbar">
+    <h1>📌 便利貼留言牆</h1>
+    <div class="toolbar-btns">
+      <button class="btn btn-refresh" onclick="loadNotes()">🔄 重整</button>
+      <button class="btn btn-add" onclick="openAddModal()">✏️ 新增留言</button>
+    </div>
+  </div>
+  
+  <!-- 留言牆 -->
+  <div class="board">
+    <div class="notes-container" id="notesContainer">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>載入中...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 新增留言 Modal -->
+  <div class="modal-overlay" id="addModal">
+    <div class="modal">
+      <h2>✏️ 新增留言</h2>
+      <form id="addForm">
+        <div class="form-group">
+          <label>暱稱 <span class="required">*</span></label>
+          <input type="text" id="addName" maxlength="20" required>
+        </div>
+        <div class="form-group">
+          <label>Email <span class="required">*</span></label>
+          <input type="email" id="addEmail" required>
+          <p class="form-hint">📧 用於修改或刪除留言時驗證身份，不會公開顯示</p>
+        </div>
+        <div class="form-group">
+          <label>留言內容 <span class="required">*</span></label>
+          <textarea id="addMessage" maxlength="300" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>便利貼顏色</label>
+          <div class="color-picker" id="addColorPicker">
+            <div class="color-option color-yellow selected" data-color="yellow"></div>
+            <div class="color-option color-pink" data-color="pink"></div>
+            <div class="color-option color-blue" data-color="blue"></div>
+            <div class="color-option color-green" data-color="green"></div>
+            <div class="color-option color-purple" data-color="purple"></div>
+            <div class="color-option color-orange" data-color="orange"></div>
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button type="button" class="btn btn-cancel" onclick="closeModal('addModal')">取消</button>
+          <button type="submit" class="btn btn-submit">送出留言</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- 檢視留言 Modal -->
+  <div class="modal-overlay" id="viewModal">
+    <div class="modal">
+      <h2>📝 留言內容</h2>
+      <div class="view-note-content" id="viewNoteContent">
+        <div class="view-note-name" id="viewNoteName"></div>
+        <div class="view-note-message" id="viewNoteMessage"></div>
+        <div class="view-note-time" id="viewNoteTime"></div>
+      </div>
+      <div class="view-actions">
+        <p>如果這是你的留言，可以輸入 Email 進行編輯或刪除：</p>
+        <div class="form-group">
+          <input type="email" id="verifyEmail" placeholder="請輸入你的 Email">
+        </div>
+        <div class="modal-btns">
+          <button type="button" class="btn btn-cancel" onclick="closeModal('viewModal')">關閉</button>
+          <button type="button" class="btn btn-edit" onclick="openEditModal()">編輯</button>
+          <button type="button" class="btn btn-delete" onclick="deleteNote()">刪除</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- 編輯留言 Modal -->
+  <div class="modal-overlay" id="editModal">
+    <div class="modal">
+      <h2>✏️ 編輯留言</h2>
+      <form id="editForm">
+        <div class="form-group">
+          <label>暱稱 <span class="required">*</span></label>
+          <input type="text" id="editName" maxlength="20" required>
+        </div>
+        <div class="form-group">
+          <label>留言內容 <span class="required">*</span></label>
+          <textarea id="editMessage" maxlength="300" required></textarea>
+        </div>
+        <div class="form-group">
+          <label>便利貼顏色</label>
+          <div class="color-picker" id="editColorPicker">
+            <div class="color-option color-yellow" data-color="yellow"></div>
+            <div class="color-option color-pink" data-color="pink"></div>
+            <div class="color-option color-blue" data-color="blue"></div>
+            <div class="color-option color-green" data-color="green"></div>
+            <div class="color-option color-purple" data-color="purple"></div>
+            <div class="color-option color-orange" data-color="orange"></div>
+          </div>
+        </div>
+        <div class="modal-btns">
+          <button type="button" class="btn btn-cancel" onclick="closeModal('editModal')">取消</button>
+          <button type="submit" class="btn btn-submit">儲存修改</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // ===== 設定 =====
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwdYK4cxbpCYjCO0G2FDpgdiUlQbrX8fDYC1LifuDEZN6jbKDxztCQ0vfbV3vHIsWqGow/exec';
+    
+    // ===== 狀態 =====
+    let currentNote = null;
+    let selectedAddColor = 'yellow';
+    let selectedEditColor = 'yellow';
+    
+    // ===== 初始化 =====
+    document.addEventListener('DOMContentLoaded', () => {
+      loadNotes();
+      setupColorPickers();
+      setupForms();
+    });
+    
+    // ===== 載入便利貼 =====
+    async function loadNotes() {
+      const container = document.getElementById('notesContainer');
+      container.innerHTML = '<div class="loading"><div class="spinner"></div><p>載入中...</p></div>';
+      
+      try {
+        const response = await fetch(`${API_URL}?action=list`);
+        const result = await response.json();
+        
+        if (result.success) {
+          renderNotes(result.data);
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>載入失敗，請重新整理</p></div>';
+      }
+    }
+    
+    // ===== 渲染便利貼 =====
+    function renderNotes(notes) {
+      const container = document.getElementById('notesContainer');
+      
+      if (notes.length === 0) {
+        container.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📝</div><p>還沒有留言，來貼第一張便利貼吧！</p></div>';
+        return;
+      }
+      
+      container.innerHTML = notes.map(note => `
+        <div class="sticky-note note-${note.color}" 
+             style="left: ${note.posX}%; top: ${note.posY}px; transform: rotate(${note.rotation}deg);"
+             onclick="viewNote('${note.id}')"
+             data-id="${note.id}"
+             data-name="${escapeAttr(note.name)}"
+             data-message="${escapeAttr(note.message)}"
+             data-color="${note.color}"
+             data-time="${note.timestamp}">
+          <div class="note-name">${escapeHtml(note.name)}</div>
+          <div class="note-message">${escapeHtml(note.message).substring(0, 100)}${note.message.length > 100 ? '...' : ''}</div>
+          <div class="note-time">${formatDate(note.timestamp)}</div>
+        </div>
+      `).join('');
+    }
+    
+    // ===== 顏色選擇器 =====
+    function setupColorPickers() {
+      // 新增表單
+      document.querySelectorAll('#addColorPicker .color-option').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('#addColorPicker .color-option').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedAddColor = el.dataset.color;
+        });
+      });
+      
+      // 編輯表單
+      document.querySelectorAll('#editColorPicker .color-option').forEach(el => {
+        el.addEventListener('click', () => {
+          document.querySelectorAll('#editColorPicker .color-option').forEach(e => e.classList.remove('selected'));
+          el.classList.add('selected');
+          selectedEditColor = el.dataset.color;
+        });
+      });
+    }
+    
+    // ===== 表單處理 =====
+    function setupForms() {
+      // 新增留言
+      document.getElementById('addForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const data = {
+          action: 'add',
+          name: document.getElementById('addName').value.trim(),
+          email: document.getElementById('addEmail').value.trim(),
+          message: document.getElementById('addMessage').value.trim(),
+          color: selectedAddColor
+        };
+        
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            showToast('留言成功！', 'success');
+            closeModal('addModal');
+            document.getElementById('addForm').reset();
+            loadNotes();
+          } else {
+            showToast(result.message, 'error');
+          }
+        } catch (error) {
+          showToast('送出失敗，請稍後再試', 'error');
+        }
+      });
+      
+      // 編輯留言
+      document.getElementById('editForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        
+        const email = document.getElementById('verifyEmail').value.trim();
+        if (!email) {
+          showToast('請先輸入 Email 驗證身份', 'error');
+          return;
+        }
+        
+        const data = {
+          action: 'edit',
+          id: currentNote.id,
+          email: email,
+          name: document.getElementById('editName').value.trim(),
+          message: document.getElementById('editMessage').value.trim(),
+          color: selectedEditColor
+        };
+        
+        try {
+          const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify(data)
+          });
+          const result = await response.json();
+          
+          if (result.success) {
+            showToast('修改成功！', 'success');
+            closeModal('editModal');
+            closeModal('viewModal');
+            loadNotes();
+          } else {
+            showToast(result.message, 'error');
+          }
+        } catch (error) {
+          showToast('修改失敗，請稍後再試', 'error');
+        }
+      });
+    }
+    
+    // ===== Modal 操作 =====
+    function openAddModal() {
+      document.getElementById('addModal').classList.add('show');
+    }
+    
+    function viewNote(id) {
+      const noteEl = document.querySelector(`[data-id="${id}"]`);
+      currentNote = {
+        id: id,
+        name: noteEl.dataset.name,
+        message: noteEl.dataset.message,
+        color: noteEl.dataset.color,
+        time: noteEl.dataset.time
+      };
+      
+      document.getElementById('viewNoteName').textContent = currentNote.name;
+      document.getElementById('viewNoteMessage').textContent = currentNote.message;
+      document.getElementById('viewNoteTime').textContent = formatDate(currentNote.time);
+      document.getElementById('viewNoteContent').className = `view-note-content note-${currentNote.color}`;
+      document.getElementById('verifyEmail').value = '';
+      
+      document.getElementById('viewModal').classList.add('show');
+    }
+    
+    function openEditModal() {
+      const email = document.getElementById('verifyEmail').value.trim();
+      if (!email) {
+        showToast('請先輸入 Email', 'error');
+        return;
+      }
+      
+      document.getElementById('editName').value = currentNote.name;
+      document.getElementById('editMessage').value = currentNote.message;
+      
+      // 設定顏色
+      document.querySelectorAll('#editColorPicker .color-option').forEach(el => {
+        el.classList.remove('selected');
+        if (el.dataset.color === currentNote.color) {
+          el.classList.add('selected');
+          selectedEditColor = currentNote.color;
+        }
+      });
+      
+      document.getElementById('editModal').classList.add('show');
+    }
+    
+    async function deleteNote() {
+      const email = document.getElementById('verifyEmail').value.trim();
+      if (!email) {
+        showToast('請先輸入 Email', 'error');
+        return;
+      }
+      
+      if (!confirm('確定要刪除這則留言嗎？')) return;
+      
+      try {
+        const response = await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'delete',
+            id: currentNote.id,
+            email: email
+          })
+        });
+        const result = await response.json();
+        
+        if (result.success) {
+          showToast('刪除成功！', 'success');
+          closeModal('viewModal');
+          loadNotes();
+        } else {
+          showToast(result.message, 'error');
+        }
+      } catch (error) {
+        showToast('刪除失敗，請稍後再試', 'error');
+      }
+    }
+    
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.remove('show');
+    }
+    
+    // 點擊背景關閉
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+          modal.classList.remove('show');
+        }
+      });
+    });
+    
+    // ===== 工具函數 =====
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function escapeAttr(text) {
+      return text.replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+    
+    function formatDate(timestamp) {
+      const date = new Date(timestamp);
+      return date.toLocaleDateString('zh-TW', {
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = `toast ${type} show`;
+      setTimeout(() => toast.classList.remove('show'), 3000);
+    }
+  </script>
+</body>
+</html>
