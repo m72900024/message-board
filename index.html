@@ -7,11 +7,7 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap');
     
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
       font-family: 'Noto Sans TC', sans-serif;
@@ -19,7 +15,6 @@
       overflow-x: hidden;
     }
     
-    /* 軟木塞牆壁背景 */
     .board {
       min-height: 100vh;
       background: 
@@ -30,12 +25,9 @@
       padding-top: 90px;
     }
     
-    /* 頂部工具列 */
     .toolbar {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       background: rgba(60, 60, 60, 0.95);
       backdrop-filter: blur(10px);
       padding: 15px 25px;
@@ -46,16 +38,8 @@
       box-shadow: 0 2px 20px rgba(0,0,0,0.3);
     }
     
-    .toolbar h1 {
-      color: #fff;
-      font-size: 1.4rem;
-      font-weight: 500;
-    }
-    
-    .toolbar-btns {
-      display: flex;
-      gap: 10px;
-    }
+    .toolbar h1 { color: #fff; font-size: 1.4rem; font-weight: 500; }
+    .toolbar-btns { display: flex; gap: 10px; }
     
     .btn {
       padding: 10px 20px;
@@ -72,22 +56,14 @@
       background: linear-gradient(135deg, #ff6b6b, #ee5a5a);
       color: #fff;
     }
-    
     .btn-add:hover {
       transform: scale(1.05);
       box-shadow: 0 4px 15px rgba(238, 90, 90, 0.4);
     }
     
-    .btn-refresh {
-      background: rgba(255,255,255,0.15);
-      color: #fff;
-    }
+    .btn-refresh { background: rgba(255,255,255,0.15); color: #fff; }
+    .btn-refresh:hover { background: rgba(255,255,255,0.25); }
     
-    .btn-refresh:hover {
-      background: rgba(255,255,255,0.25);
-    }
-    
-    /* 便利貼容器 */
     .notes-container {
       position: relative;
       min-height: calc(100vh - 110px);
@@ -95,7 +71,6 @@
       margin: 0 auto;
     }
     
-    /* 便利貼樣式 */
     .sticky-note {
       position: absolute;
       width: 200px;
@@ -103,34 +78,34 @@
       padding: 15px;
       padding-top: 25px;
       border-radius: 3px;
-      box-shadow: 
-        3px 3px 10px rgba(0,0,0,0.2),
-        0 0 1px rgba(0,0,0,0.1);
-      cursor: pointer;
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 3px 3px 10px rgba(0,0,0,0.2), 0 0 1px rgba(0,0,0,0.1);
+      cursor: grab;
+      transition: box-shadow 0.2s;
       word-break: break-word;
+      user-select: none;
     }
     
     .sticky-note::before {
       content: '';
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
+      top: 0; left: 0; right: 0;
       height: 25px;
       background: linear-gradient(to bottom, rgba(0,0,0,0.08), transparent);
       border-radius: 3px 3px 0 0;
     }
     
     .sticky-note:hover {
-      transform: scale(1.05) rotate(0deg) !important;
-      box-shadow: 
-        8px 8px 25px rgba(0,0,0,0.3),
-        0 0 1px rgba(0,0,0,0.1);
+      box-shadow: 8px 8px 25px rgba(0,0,0,0.3), 0 0 1px rgba(0,0,0,0.1);
       z-index: 10;
     }
     
-    /* 圖釘 */
+    .sticky-note.dragging {
+      cursor: grabbing;
+      box-shadow: 12px 12px 35px rgba(0,0,0,0.4), 0 0 1px rgba(0,0,0,0.1);
+      z-index: 100;
+      transform: scale(1.05) rotate(0deg) !important;
+    }
+    
     .sticky-note::after {
       content: '📌';
       position: absolute;
@@ -141,7 +116,6 @@
       filter: drop-shadow(1px 1px 2px rgba(0,0,0,0.3));
     }
     
-    /* 便利貼顏色 */
     .note-yellow { background: linear-gradient(135deg, #fff59d, #fff176); }
     .note-pink { background: linear-gradient(135deg, #f8bbd9, #f48fb1); }
     .note-blue { background: linear-gradient(135deg, #b3e5fc, #81d4fa); }
@@ -173,13 +147,18 @@
       color: rgba(0,0,0,0.4);
     }
     
-    /* Modal 共用樣式 */
+    .drag-hint {
+      position: absolute;
+      bottom: 8px;
+      left: 10px;
+      font-size: 0.65rem;
+      color: rgba(0,0,0,0.3);
+    }
+    
+    /* Modal */
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      top: 0; left: 0; right: 0; bottom: 0;
       background: rgba(0,0,0,0.6);
       display: flex;
       align-items: center;
@@ -190,10 +169,7 @@
       transition: all 0.3s;
     }
     
-    .modal-overlay.show {
-      opacity: 1;
-      visibility: visible;
-    }
+    .modal-overlay.show { opacity: 1; visibility: visible; }
     
     .modal {
       background: #fff;
@@ -207,20 +183,10 @@
       transition: all 0.3s;
     }
     
-    .modal-overlay.show .modal {
-      transform: scale(1) translateY(0);
-    }
+    .modal-overlay.show .modal { transform: scale(1) translateY(0); }
+    .modal h2 { margin-bottom: 20px; color: #333; font-size: 1.4rem; }
     
-    .modal h2 {
-      margin-bottom: 20px;
-      color: #333;
-      font-size: 1.4rem;
-    }
-    
-    .form-group {
-      margin-bottom: 18px;
-    }
-    
+    .form-group { margin-bottom: 18px; }
     .form-group label {
       display: block;
       margin-bottom: 6px;
@@ -228,10 +194,7 @@
       font-weight: 500;
       font-size: 0.9rem;
     }
-    
-    .form-group label .required {
-      color: #e74c3c;
-    }
+    .form-group label .required { color: #e74c3c; }
     
     .form-group input,
     .form-group textarea {
@@ -250,23 +213,10 @@
       border-color: #667eea;
     }
     
-    .form-group textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
+    .form-group textarea { resize: vertical; min-height: 100px; }
+    .form-hint { font-size: 0.8rem; color: #888; margin-top: 5px; }
     
-    .form-hint {
-      font-size: 0.8rem;
-      color: #888;
-      margin-top: 5px;
-    }
-    
-    /* 顏色選擇器 */
-    .color-picker {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .color-picker { display: flex; gap: 10px; flex-wrap: wrap; }
     
     .color-option {
       width: 36px;
@@ -277,10 +227,7 @@
       transition: all 0.2s;
     }
     
-    .color-option:hover {
-      transform: scale(1.1);
-    }
-    
+    .color-option:hover { transform: scale(1.1); }
     .color-option.selected {
       border-color: #333;
       box-shadow: 0 0 0 2px #fff, 0 0 0 4px #333;
@@ -293,48 +240,16 @@
     .color-purple { background: #ce93d8; }
     .color-orange { background: #ffcc80; }
     
-    .modal-btns {
-      display: flex;
-      gap: 12px;
-      margin-top: 25px;
-    }
+    .modal-btns { display: flex; gap: 12px; margin-top: 25px; }
+    .modal-btns .btn { flex: 1; padding: 14px; }
     
-    .modal-btns .btn {
-      flex: 1;
-      padding: 14px;
-    }
+    .btn-cancel { background: #e0e0e0; color: #333; }
+    .btn-submit { background: linear-gradient(135deg, #667eea, #764ba2); color: #fff; }
+    .btn-submit:hover { box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4); }
+    .btn-delete { background: #e74c3c; color: #fff; }
+    .btn-edit { background: #3498db; color: #fff; }
     
-    .btn-cancel {
-      background: #e0e0e0;
-      color: #333;
-    }
-    
-    .btn-submit {
-      background: linear-gradient(135deg, #667eea, #764ba2);
-      color: #fff;
-    }
-    
-    .btn-submit:hover {
-      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
-    }
-    
-    .btn-delete {
-      background: #e74c3c;
-      color: #fff;
-    }
-    
-    .btn-edit {
-      background: #3498db;
-      color: #fff;
-    }
-    
-    /* 檢視留言 Modal */
-    .view-note-content {
-      padding: 20px;
-      border-radius: 10px;
-      margin-bottom: 20px;
-    }
-    
+    .view-note-content { padding: 20px; border-radius: 10px; margin-bottom: 20px; }
     .view-note-name {
       font-size: 1.3rem;
       font-weight: 700;
@@ -342,32 +257,12 @@
       padding-bottom: 10px;
       border-bottom: 2px solid rgba(0,0,0,0.1);
     }
+    .view-note-message { font-size: 1rem; line-height: 1.8; white-space: pre-wrap; }
+    .view-note-time { text-align: right; font-size: 0.85rem; color: #888; margin-top: 15px; }
     
-    .view-note-message {
-      font-size: 1rem;
-      line-height: 1.8;
-      white-space: pre-wrap;
-    }
+    .view-actions { border-top: 1px solid #eee; padding-top: 20px; }
+    .view-actions p { font-size: 0.9rem; color: #666; margin-bottom: 15px; }
     
-    .view-note-time {
-      text-align: right;
-      font-size: 0.85rem;
-      color: #888;
-      margin-top: 15px;
-    }
-    
-    .view-actions {
-      border-top: 1px solid #eee;
-      padding-top: 20px;
-    }
-    
-    .view-actions p {
-      font-size: 0.9rem;
-      color: #666;
-      margin-bottom: 15px;
-    }
-    
-    /* Toast 提示 */
     .toast {
       position: fixed;
       bottom: 30px;
@@ -382,15 +277,10 @@
       z-index: 300;
     }
     
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-    
+    .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
     .toast.success { background: #27ae60; }
     .toast.error { background: #e74c3c; }
     
-    /* 空白狀態 */
     .empty-state {
       position: absolute;
       top: 50%;
@@ -400,17 +290,9 @@
       color: rgba(255,255,255,0.8);
     }
     
-    .empty-state-icon {
-      font-size: 5rem;
-      margin-bottom: 20px;
-    }
+    .empty-state-icon { font-size: 5rem; margin-bottom: 20px; }
+    .empty-state p { font-size: 1.2rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.3); }
     
-    .empty-state p {
-      font-size: 1.2rem;
-      text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-    }
-    
-    /* 載入動畫 */
     .loading {
       position: absolute;
       top: 50%;
@@ -430,11 +312,8 @@
       margin: 0 auto 15px;
     }
     
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
     
-    /* RWD */
     @media (max-width: 600px) {
       .toolbar h1 { font-size: 1.1rem; }
       .sticky-note { width: 160px; min-height: 150px; }
@@ -443,7 +322,6 @@
   </style>
 </head>
 <body>
-  <!-- 頂部工具列 -->
   <div class="toolbar">
     <h1>📌 便利貼留言牆</h1>
     <div class="toolbar-btns">
@@ -452,13 +330,9 @@
     </div>
   </div>
   
-  <!-- 留言牆 -->
   <div class="board">
     <div class="notes-container" id="notesContainer">
-      <div class="loading">
-        <div class="spinner"></div>
-        <p>載入中...</p>
-      </div>
+      <div class="loading"><div class="spinner"></div><p>載入中...</p></div>
     </div>
   </div>
   
@@ -474,7 +348,7 @@
         <div class="form-group">
           <label>Email <span class="required">*</span></label>
           <input type="email" id="addEmail" required>
-          <p class="form-hint">📧 用於修改或刪除留言時驗證身份，不會公開顯示</p>
+          <p class="form-hint">📧 用於修改或刪除時驗證身份，不會公開顯示</p>
         </div>
         <div class="form-group">
           <label>留言內容 <span class="required">*</span></label>
@@ -509,7 +383,7 @@
         <div class="view-note-time" id="viewNoteTime"></div>
       </div>
       <div class="view-actions">
-        <p>如果這是你的留言，可以輸入 Email 進行編輯或刪除：</p>
+        <p>如果這是你的留言，輸入 Email 即可編輯或刪除：</p>
         <div class="form-group">
           <input type="email" id="verifyEmail" placeholder="請輸入你的 Email">
         </div>
@@ -554,24 +428,76 @@
     </div>
   </div>
   
-  <!-- Toast -->
   <div class="toast" id="toast"></div>
 
   <script>
     // ===== 設定 =====
-    const API_URL = 'https://script.google.com/macros/s/AKfycbwdYK4cxbpCYjCO0G2FDpgdiUlQbrX8fDYC1LifuDEZN6jbKDxztCQ0vfbV3vHIsWqGow/exec';
+    const API_URL = '你的_https://script.google.com/macros/s/AKfycbwQ7bA1RCw-pehyUu4bjrymL3wB91vQ5ERdV4At2mAznEROyqPHculOsE-l4vIMTxOmWQ/exec';
+    const NOTE_WIDTH = 200;
+    const NOTE_HEIGHT = 180;
     
     // ===== 狀態 =====
     let currentNote = null;
     let selectedAddColor = 'yellow';
     let selectedEditColor = 'yellow';
+    let allNotes = [];
+    
+    // 拖曳相關
+    let isDragging = false;
+    let dragStartX, dragStartY;
+    let dragNote = null;
+    let dragOffsetX, dragOffsetY;
+    let hasMoved = false;
     
     // ===== 初始化 =====
     document.addEventListener('DOMContentLoaded', () => {
       loadNotes();
       setupColorPickers();
       setupForms();
+      setupDragAndDrop();
     });
+    
+    // ===== 計算不重疊位置 =====
+    function calculatePosition(existingNotes, containerWidth, containerHeight) {
+      const maxAttempts = 50;
+      const padding = 20;
+      
+      for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const x = Math.floor(Math.random() * (containerWidth - NOTE_WIDTH - padding * 2)) + padding;
+        const y = Math.floor(Math.random() * (containerHeight - NOTE_HEIGHT - padding * 2)) + padding;
+        
+        let overlaps = false;
+        for (const note of existingNotes) {
+          if (isOverlapping(x, y, note.posX, note.posY)) {
+            overlaps = true;
+            break;
+          }
+        }
+        
+        if (!overlaps) {
+          return { x, y };
+        }
+      }
+      
+      // 如果找不到不重疊的位置，用網格方式排列
+      const cols = Math.floor(containerWidth / (NOTE_WIDTH + padding));
+      const index = existingNotes.length;
+      const col = index % cols;
+      const row = Math.floor(index / cols);
+      
+      return {
+        x: col * (NOTE_WIDTH + padding) + padding,
+        y: row * (NOTE_HEIGHT + padding) + padding
+      };
+    }
+    
+    function isOverlapping(x1, y1, x2, y2) {
+      const buffer = 20;
+      return !(x1 + NOTE_WIDTH + buffer < x2 || 
+               x2 + NOTE_WIDTH + buffer < x1 || 
+               y1 + NOTE_HEIGHT + buffer < y2 || 
+               y2 + NOTE_HEIGHT + buffer < y1);
+    }
     
     // ===== 載入便利貼 =====
     async function loadNotes() {
@@ -583,7 +509,8 @@
         const result = await response.json();
         
         if (result.success) {
-          renderNotes(result.data);
+          allNotes = result.data;
+          renderNotes(allNotes);
         } else {
           showToast(result.message, 'error');
         }
@@ -603,23 +530,113 @@
       
       container.innerHTML = notes.map(note => `
         <div class="sticky-note note-${note.color}" 
-             style="left: ${note.posX}%; top: ${note.posY}px; transform: rotate(${note.rotation}deg);"
-             onclick="viewNote('${note.id}')"
+             style="left: ${note.posX}px; top: ${note.posY}px; transform: rotate(${note.rotation}deg);"
              data-id="${note.id}"
              data-name="${escapeAttr(note.name)}"
              data-message="${escapeAttr(note.message)}"
              data-color="${note.color}"
-             data-time="${note.timestamp}">
+             data-time="${note.timestamp}"
+             data-rotation="${note.rotation}">
           <div class="note-name">${escapeHtml(note.name)}</div>
           <div class="note-message">${escapeHtml(note.message).substring(0, 100)}${note.message.length > 100 ? '...' : ''}</div>
+          <span class="drag-hint">可拖曳移動</span>
           <div class="note-time">${formatDate(note.timestamp)}</div>
         </div>
       `).join('');
     }
     
+    // ===== 拖曳功能 =====
+    function setupDragAndDrop() {
+      const container = document.getElementById('notesContainer');
+      
+      container.addEventListener('mousedown', startDrag);
+      document.addEventListener('mousemove', onDrag);
+      document.addEventListener('mouseup', endDrag);
+      
+      container.addEventListener('touchstart', startDrag, { passive: false });
+      document.addEventListener('touchmove', onDrag, { passive: false });
+      document.addEventListener('touchend', endDrag);
+    }
+    
+    function startDrag(e) {
+      const note = e.target.closest('.sticky-note');
+      if (!note) return;
+      
+      e.preventDefault();
+      
+      isDragging = true;
+      hasMoved = false;
+      dragNote = note;
+      
+      const rect = note.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      dragOffsetX = clientX - rect.left;
+      dragOffsetY = clientY - rect.top;
+      dragStartX = clientX;
+      dragStartY = clientY;
+      
+      note.classList.add('dragging');
+    }
+    
+    function onDrag(e) {
+      if (!isDragging || !dragNote) return;
+      
+      e.preventDefault();
+      
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      
+      if (Math.abs(clientX - dragStartX) > 5 || Math.abs(clientY - dragStartY) > 5) {
+        hasMoved = true;
+      }
+      
+      const container = document.getElementById('notesContainer');
+      const containerRect = container.getBoundingClientRect();
+      
+      let newX = clientX - containerRect.left - dragOffsetX;
+      let newY = clientY - containerRect.top - dragOffsetY;
+      
+      newX = Math.max(0, Math.min(newX, containerRect.width - dragNote.offsetWidth));
+      newY = Math.max(0, Math.min(newY, containerRect.height - dragNote.offsetHeight));
+      
+      dragNote.style.left = newX + 'px';
+      dragNote.style.top = newY + 'px';
+    }
+    
+    function endDrag(e) {
+      if (!isDragging || !dragNote) return;
+      
+      dragNote.classList.remove('dragging');
+      
+      if (hasMoved) {
+        const id = dragNote.dataset.id;
+        const newX = parseInt(dragNote.style.left);
+        const newY = parseInt(dragNote.style.top);
+        savePosition(id, newX, newY);
+      } else {
+        viewNote(dragNote.dataset.id);
+      }
+      
+      isDragging = false;
+      dragNote = null;
+      hasMoved = false;
+    }
+    
+    async function savePosition(id, posX, posY) {
+      try {
+        await fetch(API_URL, {
+          method: 'POST',
+          body: JSON.stringify({ action: 'updatePosition', id, posX, posY })
+        });
+      } catch (error) {
+        console.log('位置儲存失敗', error);
+      }
+    }
+    
     // ===== 顏色選擇器 =====
     function setupColorPickers() {
-      // 新增表單
       document.querySelectorAll('#addColorPicker .color-option').forEach(el => {
         el.addEventListener('click', () => {
           document.querySelectorAll('#addColorPicker .color-option').forEach(e => e.classList.remove('selected'));
@@ -628,7 +645,6 @@
         });
       });
       
-      // 編輯表單
       document.querySelectorAll('#editColorPicker .color-option').forEach(el => {
         el.addEventListener('click', () => {
           document.querySelectorAll('#editColorPicker .color-option').forEach(e => e.classList.remove('selected'));
@@ -640,16 +656,20 @@
     
     // ===== 表單處理 =====
     function setupForms() {
-      // 新增留言
       document.getElementById('addForm').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        const container = document.getElementById('notesContainer');
+        const pos = calculatePosition(allNotes, container.offsetWidth, container.offsetHeight);
         
         const data = {
           action: 'add',
           name: document.getElementById('addName').value.trim(),
           email: document.getElementById('addEmail').value.trim(),
           message: document.getElementById('addMessage').value.trim(),
-          color: selectedAddColor
+          color: selectedAddColor,
+          posX: pos.x,
+          posY: pos.y
         };
         
         try {
@@ -663,6 +683,9 @@
             showToast('留言成功！', 'success');
             closeModal('addModal');
             document.getElementById('addForm').reset();
+            document.querySelectorAll('#addColorPicker .color-option').forEach(e => e.classList.remove('selected'));
+            document.querySelector('#addColorPicker .color-yellow').classList.add('selected');
+            selectedAddColor = 'yellow';
             loadNotes();
           } else {
             showToast(result.message, 'error');
@@ -672,7 +695,6 @@
         }
       });
       
-      // 編輯留言
       document.getElementById('editForm').addEventListener('submit', async (e) => {
         e.preventDefault();
         
@@ -719,6 +741,8 @@
     
     function viewNote(id) {
       const noteEl = document.querySelector(`[data-id="${id}"]`);
+      if (!noteEl) return;
+      
       currentNote = {
         id: id,
         name: noteEl.dataset.name,
@@ -746,7 +770,6 @@
       document.getElementById('editName').value = currentNote.name;
       document.getElementById('editMessage').value = currentNote.message;
       
-      // 設定顏色
       document.querySelectorAll('#editColorPicker .color-option').forEach(el => {
         el.classList.remove('selected');
         if (el.dataset.color === currentNote.color) {
@@ -770,11 +793,7 @@
       try {
         const response = await fetch(API_URL, {
           method: 'POST',
-          body: JSON.stringify({
-            action: 'delete',
-            id: currentNote.id,
-            email: email
-          })
+          body: JSON.stringify({ action: 'delete', id: currentNote.id, email: email })
         });
         const result = await response.json();
         
@@ -794,12 +813,9 @@
       document.getElementById(modalId).classList.remove('show');
     }
     
-    // 點擊背景關閉
     document.querySelectorAll('.modal-overlay').forEach(modal => {
       modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-          modal.classList.remove('show');
-        }
+        if (e.target === modal) modal.classList.remove('show');
       });
     });
     
@@ -817,10 +833,7 @@
     function formatDate(timestamp) {
       const date = new Date(timestamp);
       return date.toLocaleDateString('zh-TW', {
-        month: 'short',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
       });
     }
     
